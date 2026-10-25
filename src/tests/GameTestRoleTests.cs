@@ -219,13 +219,20 @@ internal static class GameTestRoleTests
             File.WriteAllBytes(daemon, daemonBytes); patched = (byte[])gameBytes.Clone(); patched[0x84] = 0x64; File.WriteAllBytes(exe, patched); Reject(() => GameTestRole.Inspect(ini), "wrong PE machine rejected"); File.WriteAllBytes(exe, gameBytes);
 
             string unicodeDirectory = Path.Combine(bin, "存档空间"); Directory.CreateDirectory(unicodeDirectory); string unicodeSave = Path.Combine(unicodeDirectory, "appfile.dat"); File.WriteAllBytes(unicodeSave, original);
-            var encodings = new[] { new UTF8Encoding(false), new UTF8Encoding(true), new UnicodeEncoding(false, true), new UnicodeEncoding(true, true), new UnicodeEncoding(false, false), new UnicodeEncoding(true, false), Encoding.Default };
+            var encodings = new Encoding[] { new UTF8Encoding(false), new UTF8Encoding(true), new UnicodeEncoding(false, true), new UnicodeEncoding(true, true), new UnicodeEncoding(false, false), new UnicodeEncoding(true, false) };
             foreach (Encoding encoding in encodings)
             {
                 WriteIni(ini, encoding, "存档空间"); string iniHash = Hash(ini); var snapshot = GameTestRole.Inspect(ini);
                 Assert(snapshot.SavePath == unicodeSave && snapshot.Role == 0, "relative Unicode appdata path " + encoding.WebName + " BOM=" + encoding.GetPreamble().Length);
                 Assert(Hash(ini) == iniHash, "INI encoding bytes preserved " + encoding.WebName);
             }
+            Encoding ansiEncoding = Encoding.Default;
+            // Select a path representable by the active Windows ANSI code page before writing it.
+            string ansiName = new[] { "存档空间", "archive-é", "appdata" }.First(name => ansiEncoding.GetString(ansiEncoding.GetBytes(name)) == name);
+            string ansiDirectory = Path.Combine(bin, ansiName); Directory.CreateDirectory(ansiDirectory); string ansiSave = Path.Combine(ansiDirectory, "appfile.dat"); File.WriteAllBytes(ansiSave, original);
+            WriteIni(ini, ansiEncoding, ansiName); string ansiIniHash = Hash(ini); var ansiSnapshot = GameTestRole.Inspect(ini);
+            Assert(ansiSnapshot.SavePath == ansiSave && ansiSnapshot.Role == 0, "relative ANSI appdata path " + ansiEncoding.WebName);
+            Assert(Hash(ini) == ansiIniHash, "ANSI INI encoding bytes preserved " + ansiEncoding.WebName);
             WriteIni(ini, new UTF8Encoding(true), "\"" + unicodeDirectory + "\""); Assert(GameTestRole.Inspect(ini).SavePath == unicodeSave, "absolute quoted appdata path");
             WriteIni(ini, new UTF8Encoding(true), "..\\main\\存档空间"); Assert(GameTestRole.Inspect(ini).SavePath == unicodeSave, "relative parent path resolves against bin");
             string[] invalidIni = { "", "[vfs]\n", "[vfs]\nappdata=appdata\nAPPDATA=appdata", "[vfs]\nappdata=appdata\n[VFS]\n", "[vfs\nappdata=appdata", "appdata=appdata", "[vfs]\nappdata=C:appdata", "[vfs]\nappdata=\\appdata", "[vfs]\nappdata=appdata.", "[vfs]\nappdata=\"appdata", "[vfs]\nappdata=missing", "[vfs]\nappdata=appdata\n[x]\na=1\na=2" };
