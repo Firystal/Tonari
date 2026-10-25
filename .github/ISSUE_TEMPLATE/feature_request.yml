@@ -1,0 +1,23 @@
+name: 功能建议
+description: 提出功能或使用体验改进建议。
+title: '[Feature] '
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景
+      description: 目前遇到了什么不便？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 改进建议
+      description: 希望 Tonari 如何处理？
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: 补充材料
+      description: 可提供参考项目、截图或示意图。

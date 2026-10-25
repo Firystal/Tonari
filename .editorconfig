@@ -1,0 +1,22 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{cs,xaml,ps1}]
+charset = utf-8-bom
+end_of_line = crlf
+
+[*.{mjs,json,yml,yaml}]
+indent_size = 2
+
+[*.manifest]
+end_of_line = crlf
+
+[*.md]
+trim_trailing_whitespace = false

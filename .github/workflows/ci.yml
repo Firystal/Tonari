@@ -1,0 +1,74 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows build
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install documentation dependencies
+        run: npm ci
+
+      - name: Build Tonari
+        run: .\src\build.ps1
+
+      - name: Run isolated tests
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($script in @(
+            'run-tests.ps1',
+            'run-game-launcher-tests.ps1',
+            'run-preparation-tests.ps1',
+            'run-test-role-tests.ps1',
+            'run-zerotier-readonly-tests.ps1'
+          )) {
+            & (Join-Path 'src\tests' $script)
+          }
+
+      - name: Package release
+        run: python tools\package.py
+
+      - name: Install documentation browser
+        run: npx playwright install chromium
+
+      - name: Verify offline guides
+        run: npm run test:docs
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tonari-windows
+          path: dist/Tonari.zip
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,48 @@
+name: 问题反馈
+description: 报告 Tonari 的异常行为。
+title: '[Bug] '
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Tonari 版本
+      placeholder: 例如 3.6.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 运行环境
+      description: Windows 版本、游戏版本、ZeroTier 版本。
+    validations:
+      required: true
+  - type: dropdown
+    id: machine
+    attributes:
+      label: 本机用途
+      options:
+        - 基准机
+        - 接入机
+        - 单机
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 从哪个操作开始，如何出现问题？
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 预期与实际结果
+      description: 可以附上错误提示或截图。
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: 诊断信息
+      description: 可附“帮助与诊断”导出的报告。提交前请移除卡号、令牌等私密信息。
